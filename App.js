@@ -5,7 +5,7 @@ import { View, Text } from 'react-native';
 export function App() {
   return (
     <View>
-      <Text>App</Text>
+      <Text>DevPost</Text>
     </View>
   );
 }
