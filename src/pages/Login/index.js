@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 
 import { View, Text } from 'react-native';
+import { AuthContext } from '../../contexts/auth';
 
 import {
   Container,
@@ -13,6 +14,7 @@ import {
 } from './styles';
 
 export function Login() {
+  const { signUp } = useContext(AuthContext);
   const [login, setLogin] = useState(true);
 
   const [name, setName] = useState('');
@@ -26,19 +28,19 @@ export function Login() {
     setPassword('');
   }
 
-  function handleSignIn() {
+  async function handleSignIn() {
     if (email === '' || password === '') {
       console.log('Preencha todos os campos');
       return;
     }
   }
 
-  function handleSignUp() {
+  async function handleSignUp() {
     if (email === '' || password === '' || name === '') {
       console.log('Preencha todos os campos para cadastrar');
       return;
     }
-    alert('Cadastrar');
+    await signUp(email, password, name);
   }
 
   if (login) {
