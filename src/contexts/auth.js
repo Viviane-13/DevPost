@@ -7,8 +7,10 @@ export const AuthContext = createContext({});
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loadingAuth, setLoadingAuth] = useState(false);
 
   async function signUp(email, password, name) {
+    setLoadingAuth(true);
     await auth()
       .createUserWithEmailAndPassword(email, password)
       .then(async (value) => {
@@ -28,15 +30,46 @@ export function AuthProvider({ children }) {
               email: value.user.email,
             };
             setUser(data);
+            setLoadingAuth(false);
           });
       })
       .catch((error) => {
+        setLoadingAuth(false);
         console.log(error);
       });
   }
 
+  async function signIn(email, password) {
+    setLoadingAuth(true);
+    await auth()
+      .signInWithEmailAndPassword(email, password)
+      .then(async (value) => {
+        let uid = value.user.uid;
+        const userProfile = await firestore()
+          .collection('users')
+          .doc(uid)
+          .get();
+
+        //console.log(userProfile.data().nome);
+        let data = {
+          uid: uid,
+          nome: userProfile.data().nome,
+          email: value.user.email,
+        };
+        setUser(data);
+        setLoadingAuth(false);
+      })
+
+      .catch((error) => {
+        console.log('Error logar...', error);
+        setLoadingAuth(false);
+      });
+  }
+
   return (
-    <AuthContext.Provider value={{ signed: !!user, signUp }}>
+    <AuthContext.Provider
+      value={{ signed: !!user, signUp, signIn, loadingAuth }}
+    >
       {children}
     </AuthContext.Provider>
   );
