@@ -84,13 +84,21 @@ export function AuthProvider({ children }) {
       });
   }
 
+  async function signOut() {
+    await auth().signOut();
+
+    await AsyncStorage.clear().then(() => {
+      setUser(null);
+    });
+  }
+
   async function storageUser(data) {
     await AsyncStorage.setItem(KEY_STORAGE, JSON.stringify(data));
   }
 
   return (
     <AuthContext.Provider
-      value={{ signed: !!user, signUp, signIn, loadingAuth, loading }}
+      value={{ signed: !!user, signUp, signIn, loadingAuth, loading, signOut }}
     >
       {children}
     </AuthContext.Provider>
