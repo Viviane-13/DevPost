@@ -1,11 +1,34 @@
-import React from 'react';
+import React, { useState, useLayoutEffect } from 'react';
 
-import { View, Text } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+
+import { Container, Input, Button, ButtonText } from './styles';
 
 export function NewPost() {
+  const navigation = useNavigation();
+
+  const [post, setPost] = useState('');
+
+  useLayoutEffect(() => {
+    const options = navigation.setOptions({
+      headerRight: () => (
+        <Button>
+          <ButtonText>Compartilhar</ButtonText>
+        </Button>
+      ),
+    });
+  }, [navigation, post]);
   return (
-    <View>
-      <Text>Tela NewPost</Text>
-    </View>
+    <Container>
+      <Input
+        placeholder="O que está acontencedo?"
+        value={post}
+        onChangeText={(text) => setPost(text)}
+        autoCorrect={false}
+        multiline={true}
+        placeholderTextColor="#DDD"
+        maxLength={300}
+      />
+    </Container>
   );
 }
