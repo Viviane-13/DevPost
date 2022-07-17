@@ -20,6 +20,11 @@ export function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [loadingRefresh, setLoadingRefresh] = useState(false);
+  const [lastItem, setLastItem] = useState('');
+
+  const [emptyList, setEmptyList] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
@@ -37,7 +42,9 @@ export function Home() {
               snapshort.docs.map((posts) => {
                 postList.push({ ...posts.data(), id: posts.id });
               });
+              setEmptyList(!!snapshort.empty);
               setPosts(postList);
+              setLastItem(snapshort.docs[snapshort.docs.length - 1]);
               setLoading(false);
             }
           });
@@ -48,6 +55,29 @@ export function Home() {
       };
     }, [])
   );
+
+  async function handleRefreshPosts() {
+    setLoadingRefresh(true);
+
+    firestore()
+      .collection('posts')
+      .orderBy('created', 'desc')
+      .limit(5)
+      .get()
+      .then((snapshort) => {
+        setPosts([]);
+        const postList = [];
+
+        snapshort.docs.map((posts) => {
+          postList.push({ ...posts.data(), id: posts.id });
+        });
+        setEmptyList(false);
+        setPosts(postList);
+        setLastItem(snapshort.docs[snapshort.docs.length - 1]);
+        setLoading(false);
+      });
+    setLoadingRefresh(false);
+  }
 
   return (
     <Container>
@@ -63,6 +93,8 @@ export function Home() {
           showsVerticalScrollIndicator={false}
           data={posts}
           renderItem={({ item }) => <PostsList data={item} userId={user.uid} />}
+          refreshing={loadingRefresh}
+          onRefresh={handleRefreshPosts}
         />
       )}
 
