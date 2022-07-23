@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 
 import { View, Text, Modal, Platform } from 'react-native';
 import { AuthContext } from '../../contexts/auth';
@@ -31,6 +31,22 @@ export function Profile() {
   const [url, setUrl] = useState(null);
 
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    async function loadAvatar() {
+      try {
+        let response = await storage()
+          .ref('users')
+          .child(user?.uid)
+          .getDownloadURL();
+        setUrl(response);
+      } catch (error) {
+        console.log('Não encontramos nenhuma foto');
+      }
+    }
+    loadAvatar();
+    return () => loadAvatar();
+  }, []);
 
   async function handleSignOut() {
     await signOut();
