@@ -23,7 +23,7 @@ import {
 } from './styles';
 
 export function Profile() {
-  const { signOut, user } = useContext(AuthContext);
+  const { signOut, user, setUser, storageUser } = useContext(AuthContext);
 
   const [name, setName] = useState(user?.nome);
   const [url, setUrl] = useState(null);
@@ -35,7 +35,34 @@ export function Profile() {
   }
   //Atualizar o perfil
   async function updateProfile() {
-    alert('Teste');
+    if (name === '') {
+      return;
+    }
+
+    await firestore().collection('users').doc(user?.uid).update({
+      nome: name,
+    });
+
+    //Buscar todos os posts desse user e atualizar o nome dele
+
+    const postDocs = await firestore()
+      .collection('posts')
+      .where('userId', '==', user?.uid)
+      .get();
+    //Percorrer os Posts do user e atualizar
+    postDocs.forEach(async (doc) => {
+      await firestore().collection('posts').doc(doc.id).update({
+        autor: name,
+      });
+    });
+    let data = {
+      uid: user.uid,
+      nome: name,
+      email: user.email,
+    };
+    setUser(data);
+    storageUser(data);
+    setOpen(false);
   }
   return (
     <Container>

@@ -106,6 +106,8 @@ export function AuthProvider({ children }) {
         loading,
         signOut,
         user,
+        setUser,
+        storageUser,
       }}
     >
       {children}
