@@ -6,7 +6,9 @@ import { AuthContext } from '../../contexts/auth';
 import { Header } from '../../components/Header';
 
 import Feather from 'react-native-vector-icons/Feather';
+import { launchImageLibrary } from 'react-native-image-picker';
 import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
 
 import {
   Container,
@@ -64,16 +66,73 @@ export function Profile() {
     storageUser(data);
     setOpen(false);
   }
+
+  const uploadFile = () => {
+    const options = {
+      noData: true,
+      mediaType: 'photo',
+    };
+    launchImageLibrary(options, (response) => {
+      if (response.didCancel) {
+        console.log('Cancelou');
+      } else if (response.error) {
+        console.log('Ops parece que deu algum erro');
+      } else {
+        // Subir para o firebase
+        uploadFileFirebase(response).then(() => {
+          uploadAvatarPosts();
+        });
+        setUrl(response.assets[0].uri);
+      }
+    });
+  };
+
+  const getFileLocalPath = (response) => {
+    //extrair e retornar a url da foto.
+    return response.assets[0].uri;
+  };
+
+  const uploadFileFirebase = async (response) => {
+    const fileSource = getFileLocalPath(response);
+
+    const storageRef = storage().ref('users').child(user?.uid);
+
+    return await storageRef.putFile(fileSource);
+  };
+
+  const uploadAvatarPosts = async () => {
+    const storageRef = storage().ref('users').child(user?.uid);
+
+    const url = await storageRef
+      .getDownloadURL()
+      .then(async (image) => {
+        //Atualizar todas as imagens dos posts desse user
+        const postDocs = await firestore()
+          .collection('posts')
+          .where('userId', '==', user?.uid)
+          .get();
+        //Percorrer os Posts e trocar a url da imagem
+        postDocs.forEach(async (doc) => {
+          await firestore().collection('posts').doc(doc.id).update({
+            avatarUrl: image,
+          });
+        });
+      })
+      .catch((error) => {
+        console.log('Error ao atualizar foto dos posts', error);
+      });
+  };
+
   return (
     <Container>
       <Header />
       {url ? (
-        <UploadButton onPress={() => alert('Clicou 1')}>
+        <UploadButton onPress={() => uploadFile()}>
           <UploadText>+</UploadText>
           <Avatar source={{ uri: url }} />
         </UploadButton>
       ) : (
-        <UploadButton onPress={() => alert('Clicou 2')}>
+        <UploadButton onPress={() => uploadFile()}>
           <UploadText>+</UploadText>
         </UploadButton>
       )}
